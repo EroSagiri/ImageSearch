@@ -12,18 +12,15 @@ import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
-import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.content
 import net.mamoe.mirai.utils.info
-import java.io.File
-import java.io.InputStream
 import java.util.regex.Pattern
 
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
-        id = "org.example.mirai-plugin",
-        name = "ExamplePlugin",
+        id = "me.sagiri.mirai.imagesearch",
+        name = "ImageSearch",
         version = "0.1.0"
     ) {
         author("sagiri")
