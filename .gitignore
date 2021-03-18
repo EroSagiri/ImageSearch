@@ -4,4 +4,7 @@
 /.idea/
 /test/
 /out/
-/run/
+/run/bots
+config
+data
+bots
