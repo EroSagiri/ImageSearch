@@ -73,6 +73,10 @@ object SauceNAO : Api {
             }
         } catch (e: java.net.SocketTimeoutException) {
             return MessageData(null, null, null, null, null, null, null, null, "超时")
+        } catch (e : javax.net.ssl.SSLException) {
+            return MessageData(null, null, null, null, null, null, null, null, "SSL ${e.toString()}")
+        } catch (e: java.net.SocketTimeoutException) {
+            return MessageData(null, null, null, null, null, null, null, null, "超时")
         }
 
         return MessageData(null, null, null, null, null, null, null, null, "没有找到")

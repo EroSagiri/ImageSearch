@@ -2,7 +2,6 @@ package me.sagiri.mirai.imagesearch.api
 
 import com.github.kevinsawicki.http.HttpRequest
 import org.json.JSONObject
-import java.io.File
 import java.util.regex.Pattern
 
 /**
@@ -59,6 +58,10 @@ object Pixiv {
             }
         } catch (e : java.net.SocketTimeoutException) {
             return PixivImagesData(null, null, "请求pixiv服务器超时")
+        } catch (e : javax.net.ssl.SSLException) {
+            return PixivImagesData(null, null, "SSL Exception")
+        } catch (e : Error) {
+            return PixivImagesData(null, null, e.toString())
         }
         return PixivImagesData(null, null, "无法从Pixiv获取图片URL")
     }

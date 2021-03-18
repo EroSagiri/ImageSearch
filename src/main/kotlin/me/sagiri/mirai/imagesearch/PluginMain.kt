@@ -1,15 +1,15 @@
 package me.sagiri.mirai.imagesearch
 
-import kotlinx.io.streams.asInput
 import me.sagiri.mirai.imagesearch.api.Pixiv
 import me.sagiri.mirai.imagesearch.api.PixivImageDownloader
-import me.sagiri.mirai.imagesearch.api.PixivImagesData
 import me.sagiri.mirai.imagesearch.api.SauceNAO
+import me.sagiri.mirai.imagesearch.tools.Downloader
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.event.events.MessageEvent
 import net.mamoe.mirai.event.globalEventChannel
+import net.mamoe.mirai.message.code.MiraiCode.deserializeMiraiCode
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.PlainText
@@ -36,9 +36,12 @@ object PluginMain : KotlinPlugin(
         globalEventChannel().subscribeAlways<MessageEvent> { event ->
 //            subject.sendMessage(PlainText("hi").plus(subject.uploadImage(File("/home/sagiri/Pictures/57471951_p0.jpg"))))
             if(Pattern.compile("^搜图").matcher(message.content).find()) {
+                logger.info("${sender.id}:${sender.nick} 使用搜图")
                 message.forEach { m ->
                     if(m is Image) {
-                        val imagesData = SauceNAO.get(m.queryUrl())
+                        val url = m.queryUrl()
+                        logger.info("${sender.id}:${sender.nick} -> ${url}")
+                        val imagesData = SauceNAO.get(url)
                         if(imagesData.error != null) {
                             subject.sendMessage(imagesData.error)
                             return@subscribeAlways
@@ -52,12 +55,22 @@ object PluginMain : KotlinPlugin(
                                     return@subscribeAlways
                                 }
                                 val fileList = PixivImageDownloader.downloadImages(pixivImagesData)
-                                var message = PlainText("标题: ${imagesData.title}\n${imagesData.orgTitle}: ${imagesData.orgId}\n作者: ${imagesData.author}\n链接: ${imagesData.url}")
-                                subject.sendMessage(message)
-                                fileList.forEach { file ->
-                                    val image = subject.uploadImage(file)
-                                    subject.sendMessage(image)
+                                var message = "[mirai:at:${sender.id}]\n标题: ${imagesData.title}\n${imagesData.orgTitle}: ${imagesData.orgId}\n作者: ${imagesData.author}\n相似度: ${imagesData.similarity}%\n链接: ${imagesData.url}\n图片链接: ${pixivImagesData.images?.get(0)}\n代理链接: ${pixivImagesData.images?.get(0)
+                                    ?.replace("i.pximg.net", "i.pixiv.cat")}".deserializeMiraiCode()
+//                                fileList.forEach { file ->
+//                                    message.plus(subject.uploadImage(file))
+//                                }
+                                if(fileList.isNotEmpty()) {
+                                    subject.sendMessage(message.plus(subject.uploadImage(fileList[0])))
                                 }
+                            }
+                        } else {
+                            var message = PlainText("标题: ${imagesData.title}\n${imagesData.orgTitle}: ${imagesData.orgId}\n作者: ${imagesData.author}\n相似度: ${imagesData.similarity}%\n链接: ${imagesData.url}\n图片链接: ${imagesData.url}")
+                            val image : Image? = imagesData.url?.let { Downloader.get(it)?.let { subject.uploadImage(it) } }
+                            if(image != null) {
+                                subject.sendMessage(message.plus(image))
+                            } else {
+                                subject.sendMessage(message)
                             }
                         }
                     }
@@ -66,6 +79,7 @@ object PluginMain : KotlinPlugin(
 
             val p = Pattern.compile("^pid.*?(\\d+)").matcher(message.content)
             if(p.find()) {
+                logger.info("${sender.id}:${sender.nick} 使用pid")
                 val pid = p.group(1).toLong()
                 val pixivImagesData = Pixiv.getImages(pid)
                 if(pixivImagesData.error != null) {
@@ -74,7 +88,7 @@ object PluginMain : KotlinPlugin(
                 }
                 val files = PixivImageDownloader.downloadImages(pixivImagesData)
                 files.forEach { image ->
-                    subject.sendMessage(subject.uploadImage(image))
+                    subject.sendMessage("[mirai:at:${sender.id}]".deserializeMiraiCode().plus(subject.uploadImage(image)))
                 }
             }
         }
