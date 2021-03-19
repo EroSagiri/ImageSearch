@@ -29,11 +29,13 @@ object Pixiv {
                     val preloadData = JSONObject(p.group(1))
                     val illust = preloadData.getJSONObject("illust")
                     for (pid in illust.names()) {
+                        val p = illust.getJSONObject(pid.toString())
                         val urls = illust.getJSONObject(pid.toString()).getJSONObject("urls")
 //                        val sl = illust.getJSONObject(pid.toString()).getInt("sl")
                         val sl = 1
                         var imageUrl = urls.getString(type)
                         val tags = illust.getJSONObject(pid.toString()).getJSONObject("tags").getJSONArray("tags")
+                        val ptags = mutableListOf<String>()
                         // 标签
                         tags.forEach { tag ->
                             if (tag is JSONObject) {
@@ -41,28 +43,49 @@ object Pixiv {
                                 if (t == "R-18" || t == "r-18" || t == "R18" || t == "r18") {
                                     R18 = true
                                 }
+                                // 添加标签到返回p标签
+                                ptags.add(tag as String)
                             }
                         }
+                        // 图片列表
                         val imagesUrl = mutableListOf<String>()
+                        // sl 是页数
                         for(i in 0 until sl) {
                             imagesUrl.add(imageUrl.replace("${pid}_p0", "${pid}_p${i}"))
                         }
+                        // 标题
+                        val title = p.getString("illustTitle") as String
+                        // 作者
+                        val author = p.getString("userName") as String
+                        // 作者id
+                        val authorId = p.getString("userId") as Long
+                        // 描述
+                        val description = p.getString("description") as String
 
-                        return PixivImagesData(R18, imagesUrl.toList(), null)
+                        return PixivImagesData(
+                            R18 = R18,
+                            images = imagesUrl.toList(),
+                            tags = ptags,
+                            title = title,
+                            description = description,
+                            author = author,
+                            authorId = authorId,
+                            error = null
+                        )
                     }
                 } else {
-                    return PixivImagesData(null, null, "无法从Pixiv获取图片URL")
+                    return PixivImagesData(error = "无法从Pixiv获取图片URL")
                 }
             } else {
-                return PixivImagesData(null, null, "请求pixiv服务器时状态码$statusCode")
+                return PixivImagesData(error = "请求pixiv服务器时状态码$statusCode")
             }
         } catch (e : java.net.SocketTimeoutException) {
-            return PixivImagesData(null, null, "请求pixiv服务器超时")
+            return PixivImagesData(error = "请求pixiv服务器超时")
         } catch (e : javax.net.ssl.SSLException) {
-            return PixivImagesData(null, null, "SSL Exception")
+            return PixivImagesData(error = "SSL Exception")
         } catch (e : Error) {
-            return PixivImagesData(null, null, e.toString())
+            return PixivImagesData(error = e.toString())
         }
-        return PixivImagesData(null, null, "无法从Pixiv获取图片URL")
+        return PixivImagesData(error = "无法从Pixiv获取图片URL")
     }
 }
