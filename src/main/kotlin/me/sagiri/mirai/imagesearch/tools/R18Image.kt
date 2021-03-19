@@ -14,12 +14,12 @@ object R18Image {
      * @imageFile File 图片文件对象
      * return File 处理好的图片文件
      */
-    fun mosaic(imageFile: File, title : String = "此图片不适合在公共场合预览", font : Font = Font("", Font.BOLD, 50)): File {
+    fun mosaic(imageFile: File, title: String = "此图片不适合在公共场合预览", font: Font? = null): File {
         val bi = ImageIO.read(imageFile)
         val width = bi.width
         val height = bi.height
         // 半径(像素)
-        val rr = 40
+        val rr = 30
         val r = if(width > height) width/rr else height/rr
         if(width < rr || height < rr) {
             return imageFile
@@ -64,10 +64,17 @@ object R18Image {
 
         val gp = bi.createGraphics()
 
-        // 标题
-        gp.font = font
+        // 字体大小
+        var fontSize = width/(title.length + 4)
+        if(font == null) {
+            gp.font = Font("", Font.BOLD, fontSize)
+        } else {
+            gp.font = font
+            fontSize = font.size
+        }
+
+        // 红色标题,居中
         gp.color = Color.red
-        val fontSize = font.size
         gp.drawString(title, width / 2 - title.length * fontSize / 2, height / 2 - fontSize / 2)
 
 

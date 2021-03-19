@@ -7,10 +7,10 @@ import java.io.File
 import java.util.regex.Pattern
 
 object PixivImageDownloader {
-    fun downloadImages(pixivImagesData: PixivImagesData) : List<File>{
+    fun downloadImages(pixivImagesData: PixivImagesData): List<File> {
         val fileList = mutableListOf<File>()
         pixivImagesData.images?.forEach { url ->
-            var req = HttpRequest.get(url)
+            var req = HttpRequest.get(url.replace("i.pximg.net", "i.pixiv.cat"))
             req.header("Referer", "https://pixiv.net")
 
             req.connectTimeout(60000)
@@ -18,29 +18,40 @@ object PixivImageDownloader {
             req.trustAllCerts()
             req.trustAllHosts()
 
-            try {
-                val statusCode = req.code()
-                if (statusCode == 200) {
-                    val p = Pattern.compile(".+/(.+?)$").matcher(url)
-                    if (p.find()) {
-                        val fileName = p.group(1)
-                        val dir = File(System.getProperty("user.dir") + "/data/imagesearch/download")
-                        if (!dir.exists()) dir.mkdirs()
-                        val file = File("$dir/$fileName")
-                        req.receive(file)
-                        if(pixivImagesData.R18 == true) {
-                            fileList.add(R18Image.mosaic(file))
-                        } else {
-                            fileList.add(file)
-                        }
+            val p = Pattern.compile(".+/(.+?)$").matcher(url)
+            if (p.find()) {
+                val fileName = p.group(1)
+                val dir = File(System.getProperty("user.dir") + "/data/imagesearch/download")
+                if (!dir.exists()) dir.mkdirs()
+                val file = File("$dir/$fileName")
+
+                // 如果存在这个文件直接返回
+                if (file.exists()) {
+                    // 如果是R18图片
+                    if (pixivImagesData.R18 == true) {
+                        fileList.add(R18Image.mosaic(file))
+                    } else {
+                        fileList.add(file)
                     }
                 } else {
-                    PluginMain.logger.error("图片下载失败: $url 状态码: $statusCode")
+                    try {
+                        val statusCode = req.code()
+                        if (statusCode == 200) {
+                            req.receive(file)
+                            if(pixivImagesData.R18 == true) {
+                                fileList.add(R18Image.mosaic(file))
+                            } else {
+                                fileList.add(file)
+                            }
+                        } else {
+                            PluginMain.logger.error("图片下载失败: $url 状态码: $statusCode")
+                        }
+                    } catch (e: java.net.SocketTimeoutException) {
+                        PluginMain.logger.error("图片下载失败: $url $e")
+                    } catch (e: javax.net.ssl.SSLException) {
+                        PluginMain.logger.error("图片下载失败: $url $e")
+                    }
                 }
-            } catch (e : java.net.SocketTimeoutException) {
-
-            } catch (e : javax.net.ssl.SSLException) {
-
             }
         }
 

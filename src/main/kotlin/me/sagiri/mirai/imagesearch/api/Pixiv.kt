@@ -31,8 +31,8 @@ object Pixiv {
                     for (pid in illust.names()) {
                         val p = illust.getJSONObject(pid.toString())
                         val urls = illust.getJSONObject(pid.toString()).getJSONObject("urls")
-//                        val sl = illust.getJSONObject(pid.toString()).getInt("sl")
-                        val sl = 1
+                        //pageCount 是页数
+                        val pageCount = illust.getJSONObject(pid.toString()).getInt("pageCount")
                         var imageUrl = urls.getString(type)
                         val tags = illust.getJSONObject(pid.toString()).getJSONObject("tags").getJSONArray("tags")
                         val ptags = mutableListOf<String>()
@@ -44,13 +44,13 @@ object Pixiv {
                                     R18 = true
                                 }
                                 // 添加标签到返回p标签
-                                ptags.add(tag as String)
+                                ptags.add(t)
                             }
                         }
                         // 图片列表
                         val imagesUrl = mutableListOf<String>()
-                        // sl 是页数
-                        for(i in 0 until sl) {
+
+                        for(i in 0 until pageCount) {
                             imagesUrl.add(imageUrl.replace("${pid}_p0", "${pid}_p${i}"))
                         }
                         // 标题
@@ -58,7 +58,8 @@ object Pixiv {
                         // 作者
                         val author = p.getString("userName") as String
                         // 作者id
-                        val authorId = p.getString("userId") as Long
+//                        val authorId = p.getString("userId") as Long
+                        val authorId = null
                         // 描述
                         val description = p.getString("description") as String
 
