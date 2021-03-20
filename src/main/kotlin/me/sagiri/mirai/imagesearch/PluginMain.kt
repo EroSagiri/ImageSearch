@@ -34,7 +34,7 @@ object PluginMain : KotlinPlugin(
     override fun onEnable() {
         logger.info { "Plugin loaded" }
 
-        // 群的最后一张图片
+        // 群的最后一张附带图片的消息链
         val groupLastImage = mutableListOf<GroupLastMessage>()
 
         globalEventChannel().subscribeAlways<MessageEvent> {
@@ -60,7 +60,7 @@ object PluginMain : KotlinPlugin(
                 }
             }
 
-            if (message.content == "test") {
+            if (Pattern.compile("last").matcher(message.serializeToMiraiCode()).find()) {
                 for (i in groupLastImage.indices) {
                     if (groupLastImage[i].groupId == sender.id && subject is Group) {
                         subject.sendMessage(groupLastImage[i].lastMessage)
@@ -68,7 +68,7 @@ object PluginMain : KotlinPlugin(
                     }
                 }
             }
-            if (Pattern.compile("^搜图").matcher(message.content).find() || Pattern.compile("\\[mirai:at:2023381589\\]")
+            if (Pattern.compile("^搜图").matcher(message.content).find() || Pattern.compile("\\[mirai:at:${bot.id}\\]")
                     .matcher(message.serializeToMiraiCode()).find()
             ) {
                 logger.info("${sender.id}:${sender.nick} 使用搜图")
@@ -105,13 +105,10 @@ object PluginMain : KotlinPlugin(
                                         相似度: ${imagesData.similarity}
                                         标签: $tags
                                         链接: ${imagesData.url}
+                                        图片链接: ${pixivImagesData.images?.get(0)?.replace("i.pximg.net", "i.pixiv.cat")}
                                         \n
                                     """.trimIndent()
                                 for (index in fileList.indices) {
-                                    msg += "P$index: ${pixivImagesData.images?.get(index)}\n".replace(
-                                        "i.pximg.net",
-                                        "i.pixiv.cat"
-                                    )
                                     msg += "[mirai:image:${subject.uploadImage(fileList[index]).imageId}]\n"
                                 }
 
@@ -169,13 +166,10 @@ object PluginMain : KotlinPlugin(
                                         相似度: ${imagesData.similarity}
                                         标签: $tags
                                         链接: ${imagesData.url}
+                                        图片链接: ${pixivImagesData.images?.get(0)?.replace("i.pximg.net", "i.pixiv.cat")}
                                         \n
                                     """.trimIndent()
                                                 for (index in fileList.indices) {
-                                                    msg += "P$index: ${pixivImagesData.images?.get(index)}\n".replace(
-                                                        "i.pximg.net",
-                                                        "i.pixiv.cat"
-                                                    )
                                                     msg += "[mirai:image:${subject.uploadImage(fileList[index]).imageId}]\n"
                                                 }
 
@@ -237,10 +231,6 @@ object PluginMain : KotlinPlugin(
                 subject.sendMessage(msg.deserializeMiraiCode())
             }
         }
-    }
-
-    fun queryImage(message: MessageChain, event: MessageEvent) {
-
     }
 }
 
