@@ -104,11 +104,12 @@ object PluginMain : KotlinPlugin(
                                         作者: ${pixivImagesData.author}
                                         相似度: ${imagesData.similarity}
                                         标签: $tags
-                                        链接: ${imagesData.url}
-                                        图片链接: ${pixivImagesData.images?.get(0)?.replace("i.pximg.net", "i.pixiv.cat")}
+                                        链接: ${pixivImagesData.url}
+                                        页数: ${pixivImagesData.page}
                                         \n
                                     """.trimIndent()
                                 for (index in fileList.indices) {
+                                    msg += "P$index: ${pixivImagesData.images?.get(index)?.replace("i.pximg.net", "i.pixiv.cat")}\n"
                                     msg += "[mirai:image:${subject.uploadImage(fileList[index]).imageId}]\n"
                                 }
 
@@ -165,11 +166,12 @@ object PluginMain : KotlinPlugin(
                                         作者: ${pixivImagesData.author}
                                         相似度: ${imagesData.similarity}
                                         标签: $tags
-                                        链接: ${imagesData.url}
-                                        图片链接: ${pixivImagesData.images?.get(0)?.replace("i.pximg.net", "i.pixiv.cat")}
+                                        链接: ${pixivImagesData.url}
+                                        页数: ${pixivImagesData.page}
                                         \n
                                     """.trimIndent()
                                                 for (index in fileList.indices) {
+                                                    msg += "P$index: ${pixivImagesData.images?.get(index)?.replace("i.pximg.net", "i.pixiv.cat")}\n"
                                                     msg += "[mirai:image:${subject.uploadImage(fileList[index]).imageId}]\n"
                                                 }
 
@@ -222,6 +224,8 @@ object PluginMain : KotlinPlugin(
                     作者: ${pixivImagesData.author}
                     标题: ${pixivImagesData.title}
                     标签: $tags
+                    链接: ${pixivImagesData.url}
+                    页数: ${pixivImagesData.page}
                     \n
                 """.trimIndent()
                 for (index in files.indices) {

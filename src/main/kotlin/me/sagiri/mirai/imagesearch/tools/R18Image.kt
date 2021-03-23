@@ -20,7 +20,7 @@ object R18Image {
         val width = bi.width
         val height = bi.height
         // 半径(像素)
-        val rr = 30
+        val rr = 34
         val r = if(width > height) width/rr else height/rr
         if(width < rr || height < rr) {
             return imageFile

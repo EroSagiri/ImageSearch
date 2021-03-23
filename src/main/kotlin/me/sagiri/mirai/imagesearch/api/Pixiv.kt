@@ -8,9 +8,9 @@ import java.util.regex.Pattern
  * 获取指定pid图片数据
  */
 object Pixiv {
-    fun getImages(pid : Long, type : String = "original") : PixivImagesData{
+    fun getImages(ppid : Long, type : String = "original") : PixivImagesData{
         var R18 = false
-        val url = "https://www.pixiv.net/artworks/$pid"
+        val url = "https://www.pixiv.net/artworks/$ppid"
         val req = HttpRequest.get(url)
 
         req.trustAllHosts()
@@ -71,7 +71,10 @@ object Pixiv {
                             description = description,
                             author = author,
                             authorId = authorId,
-                            error = null
+                            error = null,
+                            url = "https://www.pixiv.net/artworks/${ppid}",
+                            pid = ppid,
+                            page = pageCount
                         )
                     }
                 } else {

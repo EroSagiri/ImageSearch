@@ -22,6 +22,12 @@ data class PixivImagesData(
     val author : String? = null,
     // 作者id
     val authorId : Long? = null,
+    // url
+    val url : String? = null,
+    // pid
+    val pid : Long? = null,
+    // page
+    val page : Int? = null
 
 ) {
 
