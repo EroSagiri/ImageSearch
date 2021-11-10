@@ -1,9 +1,15 @@
 package me.sagiri.mirai.imagesearch
 
+import io.ktor.client.engine.*
+import io.ktor.client.engine.apache.*
 import me.sagiri.mirai.imagesearch.api.Pixiv
 import me.sagiri.mirai.imagesearch.api.PixivImageDownloader
 import me.sagiri.mirai.imagesearch.api.SauceNAO
+import me.sagiri.mirai.imagesearch.config.Proxy
+import me.sagiri.mirai.imagesearch.config.R18
 import me.sagiri.mirai.imagesearch.tools.Downloader
+import me.sagiri.mirai.imagesearch.tools.HttpClient
+import net.mamoe.mirai.console.extension.PluginComponentStorage
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.contact.Contact.Companion.uploadImage
@@ -20,7 +26,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "me.sagiri.mirai.imagesearch",
         name = "ImageSearch",
-        version = "0.1.0"
+        version = "0.1.1"
     ) {
         author("sagiri")
 
@@ -31,6 +37,18 @@ object PluginMain : KotlinPlugin(
         )
     }
 ) {
+    override fun PluginComponentStorage.onLoad() {
+        Proxy.reload()
+        R18.reload()
+
+        if(Proxy.port != 0L) {
+            HttpClient.client = io.ktor.client.HttpClient(Apache) {
+                engine {
+                    proxy = ProxyBuilder.http("http://${Proxy.host}:${Proxy.port}")
+                }
+            }
+        }
+    }
     override fun onEnable() {
         logger.info { "Plugin loaded" }
 
@@ -109,7 +127,7 @@ object PluginMain : KotlinPlugin(
                                         \n
                                     """.trimIndent()
                                 for (index in fileList.indices) {
-                                    msg += "P$index: ${pixivImagesData.images?.get(index)?.replace("i.pximg.net", "i.pixiv.cat")}\n"
+                                    msg += "P$index: ${pixivImagesData.images?.get(index)}\n"
                                     msg += "[mirai:image:${subject.uploadImage(fileList[index]).imageId}]\n"
                                 }
 
@@ -171,7 +189,7 @@ object PluginMain : KotlinPlugin(
                                         \n
                                     """.trimIndent()
                                                 for (index in fileList.indices) {
-                                                    msg += "P$index: ${pixivImagesData.images?.get(index)?.replace("i.pximg.net", "i.pixiv.cat")}\n"
+                                                    msg += "P$index: ${pixivImagesData.images?.get(index)}\n"
                                                     msg += "[mirai:image:${subject.uploadImage(fileList[index]).imageId}]\n"
                                                 }
 
@@ -202,7 +220,7 @@ object PluginMain : KotlinPlugin(
             }
 
             /**
-             * 查pidf
+             * 查pid
              */
             val p = Pattern.compile("^pid.*?(\\d+)").matcher(message.content)
             if (p.find()) {
@@ -229,12 +247,16 @@ object PluginMain : KotlinPlugin(
                     \n
                 """.trimIndent()
                 for (index in files.indices) {
-                    msg += "P$index: ${pixivImagesData.images?.get(index)?.replace("i.pximg.net", "i.pixiv.cat")}\n"
+                    msg += "P$index: ${pixivImagesData.images?.get(index)}\n"
                     msg += "[mirai:image:${subject.uploadImage(files[index]).imageId}]\n"
                 }
                 subject.sendMessage(msg.deserializeMiraiCode())
             }
         }
+    }
+
+    override fun onDisable() {
+
     }
 }
 

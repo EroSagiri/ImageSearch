@@ -30,8 +30,8 @@ object SauceNAO : Api {
                         similarity = p.group(2).toDouble(),
                         title = p.group(3),
                         orgTitle = p.group(4),
-                        url = p.group(6),
-                        orgId = p.group(5),
+                        url = p.group(5),
+                        orgId = p.group(6),
                         author = p.group(8),
                         authorUrl = p.group(7),
                         error = null
@@ -49,6 +49,7 @@ object SauceNAO : Api {
 
     fun get(url : String): MessageData {
         // new 一个请求头
+
         val req = HttpRequest.get("https://saucenao.com/search.php?url=$url")
         // 设置用户代理
         req.header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0")
