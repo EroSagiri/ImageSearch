@@ -1,37 +1,26 @@
 package me.sagiri.mirai.imagesearch.tools
 
-import com.github.kevinsawicki.http.HttpRequest
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import me.sagiri.mirai.imagesearch.PluginMain
 import java.io.File
 import java.net.SocketTimeoutException
 import java.util.regex.Pattern
 
 object Downloader {
-    fun get(url : String): File? {
-        val req = HttpRequest.get(url)
-
-        req.trustAllCerts()
-        req.trustAllHosts()
-
-        req.connectTimeout(60000)
-
-        var code = 0
-
-        try{
-            code = req.code()
-        } catch (e : SocketTimeoutException) {
-            PluginMain.logger.error("下载${url}时超时")
-            return null
-        }
-
-        if(code == 200) {
+    suspend fun get(url : String): File? {
+        val req = HttpClient.client.get<HttpResponse>(url)
+        if(req.status == HttpStatusCode.OK) {
             val p = Pattern.compile(".+/(.+?)$").matcher(url)
             if (p.find()) {
                 val fileName = p.group(1)
                 val dir = File(System.getProperty("user.dir") + "/data/imagesearch/download")
                 if (!dir.exists()) dir.mkdirs()
                 val file = File("$dir/$fileName")
-                req.receive(file)
+
+                file.writeBytes(req.receive())
 
                 return file
             } else {
@@ -39,7 +28,7 @@ object Downloader {
                 return null
             }
         } else {
-            PluginMain.logger.error("下载${url}状态码 $code")
+            PluginMain.logger.error("下载${url}状态码 ${req.status}")
             return null
         }
     }

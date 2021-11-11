@@ -27,10 +27,6 @@ suspend fun main() {
                     append("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:93.0) Gecko/20100101 Firefox/93.0")
                     append("Accept", "image/avif,image/webp,*/*")
                 }
-
-                onDownload { bytesSentTotal: Long, contentLength: Long ->
-                    println("Received $bytesSentTotal bytes from $contentLength")
-                }
             }
 
         println(response.status)

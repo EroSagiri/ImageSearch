@@ -1,27 +1,34 @@
 package me.sagiri.mirai.imagesearch.api
 
-import com.github.kevinsawicki.http.HttpRequest
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.network.sockets.*
+import me.sagiri.mirai.imagesearch.config.PximgProxy.url
+import me.sagiri.mirai.imagesearch.tools.HttpClient
 import java.io.File
 import java.util.regex.Pattern
 
 object SauceNAO : Api {
-    override fun get(imageFile: File): MessageData {
-        // new 一个请求头
-        val req = HttpRequest.post("https://saucenao.com/search.php")
-        // 设置用户代理
-        req.header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0")
-        req.header("Origin", "https://saucenao.com")
-
-//        val f = File("/home/sagiri/Pictures/85968512_p0.jpg")
-        req.part("file", imageFile.name, "image/jpeg", imageFile)
-        req.trustAllCerts()
-        req.trustAllHosts()
-        // 设置超时时间
-        req.connectTimeout(10000)
-
+    override suspend fun get(imageFile: File): MessageData {
         try {
-            if (req.code() == 200) {
-                val html = req.body()
+            val response: HttpResponse = HttpClient.client.post(url) {
+                headers {
+                    append("Origin", "https://saucenao.com")
+                    append("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:93.0) Gecko/20100101 Firefox/93.0")
+                }
+
+                formData {
+                    append("file", imageFile.readBytes(), Headers.build {
+                        append(HttpHeaders.ContentType, "image/jpg")
+                        append(HttpHeaders.ContentDisposition, "filename=${imageFile.name}")
+                    })
+                }
+            }
+            if (response.status == HttpStatusCode.OK) {
+                val html = response.receive<String>()
 
                 val p = Pattern.compile("<div class=\"result\"><table class=\"resulttable\">.*?<img.*?src=\"(.+?)\".*?<div class=\"resultsimilarityinfo\">(.+?)%</div>.*?<div class=\"resulttitle\"><strong>(.+?)</strong>.*?<div class=\"resultcontentcolumn\"><strong>(.+?)</strong><a href=\"(.+?)\" class=\"linkify\">(.+?)</a>.*?<a href=\"(.+?)\" class=\"linkify\">(.+?)</a>.*?</table></div>").matcher(html)
                 if(p.find()) {
@@ -40,30 +47,23 @@ object SauceNAO : Api {
             } else {
                 return MessageData(null, null, null, null, null, null, null, null, "没有找到")
             }
-        } catch (e: java.net.SocketTimeoutException) {
+        } catch (e: ConnectTimeoutException) {
             return MessageData(null, null, null, null, null, null, null, null, "超时")
         }
 
         return MessageData(null, null, null, null, null, null, null, null, "没有找到")
     }
 
-    fun get(url : String): MessageData {
-        // new 一个请求头
-
-        val req = HttpRequest.get("https://saucenao.com/search.php?url=$url")
-        // 设置用户代理
-        req.header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0")
-        req.header("Origin", "https://saucenao.com")
-
-//        val f = File("/home/sagiri/Pictures/85968512_p0.jpg")
-        req.trustAllCerts()
-        req.trustAllHosts()
-        // 设置超时时间
-        req.connectTimeout(10000)
-
+    suspend fun get(url : String): MessageData {
         try {
-            if (req.code() == 200) {
-                val html = req.body()
+            val response: HttpResponse = HttpClient.client.get("https://saucenao.com/search.php?url=$url") {
+                headers {
+                    append("Origin", "https://saucenao.com")
+                    append("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:93.0) Gecko/20100101 Firefox/93.0")
+                }
+            }
+            if (response.status == HttpStatusCode.OK) {
+                val html = response.receive<String>()
 
                 val p = Pattern.compile("<div class=\"result\"><table class=\"resulttable\">.*?<img.*?src=\"(.+?)\".*?<div class=\"resultsimilarityinfo\">(.+?)%</div>.*?<div class=\"resulttitle\"><strong>(.+?)</strong>.*?<div class=\"resultcontentcolumn\"><strong>(.+?)</strong><a href=\"(.+?)\" class=\"linkify\">(.+?)</a>.*?<a href=\"(.+?)\" class=\"linkify\">(.+?)</a>.*?</table></div>").matcher(html)
                 if(p.find()) {
@@ -72,11 +72,7 @@ object SauceNAO : Api {
             } else {
                 return MessageData(null, null, null, null, null, null, null, null, "没有找到")
             }
-        } catch (e: java.net.SocketTimeoutException) {
-            return MessageData(null, null, null, null, null, null, null, null, "超时")
-        } catch (e : javax.net.ssl.SSLException) {
-            return MessageData(null, null, null, null, null, null, null, null, "SSL ${e.toString()}")
-        } catch (e: java.net.SocketTimeoutException) {
+        } catch (e: ConnectTimeoutException) {
             return MessageData(null, null, null, null, null, null, null, null, "超时")
         }
 

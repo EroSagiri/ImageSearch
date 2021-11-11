@@ -1,6 +1,11 @@
 package me.sagiri.mirai.imagesearch.api
 
-import com.github.kevinsawicki.http.HttpRequest
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import me.sagiri.mirai.imagesearch.config.PximgProxy
+import me.sagiri.mirai.imagesearch.tools.HttpClient
 import org.json.JSONObject
 import java.util.regex.Pattern
 
@@ -8,20 +13,20 @@ import java.util.regex.Pattern
  * 获取指定pid图片数据
  */
 object Pixiv {
-    fun getImages(ppid : Long, type : String = "original") : PixivImagesData{
+    suspend fun getImages(ppid : Long, type : String = "original") : PixivImagesData{
         var R18 = false
         val url = "https://www.pixiv.net/artworks/$ppid"
-        val req = HttpRequest.get(url)
-
-        req.trustAllHosts()
-        req.trustAllCerts()
-
-        req.connectTimeout(10000)
 
         try {
-            val statusCode = req.code()
-            if (statusCode == 200) {
-                val html = req.body()
+            val response: HttpResponse = HttpClient.client.get(url) {
+                headers {
+                    append("Origin", "https://www.pixiv.net/")
+                    append("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:93.0) Gecko/20100101 Firefox/93.0")
+                }
+            }
+
+            if (response.status == HttpStatusCode.OK) {
+                val html = response.receive<String>()
 //                File("test.html").writeText(html)
                 val p = Pattern.compile("<meta name=\"preload-data\" id=\"meta-preload-data\" content='(.+?)'")
                     .matcher(html)
@@ -51,7 +56,13 @@ object Pixiv {
                         val imagesUrl = mutableListOf<String>()
 
                         for(i in 0 until pageCount) {
-                            imagesUrl.add(imageUrl.replace("${pid}_p0", "${pid}_p${i}"))
+                            var url = imageUrl.replace("${pid}_p0", "${pid}_p${i}")
+
+                            if(PximgProxy.url.length > 0) {
+                                url.replace("i.pximg.net", PximgProxy.url)
+                            }
+
+                            imagesUrl.add(url)
                         }
                         // 标题
                         val title = p.getString("illustTitle") as String
@@ -81,7 +92,7 @@ object Pixiv {
                     return PixivImagesData(error = "无法从Pixiv获取图片URL")
                 }
             } else {
-                return PixivImagesData(error = "请求pixiv服务器时状态码$statusCode")
+                return PixivImagesData(error = "请求pixiv服务器时状态码${response.status}")
             }
         } catch (e : java.net.SocketTimeoutException) {
             return PixivImagesData(error = "请求pixiv服务器超时")

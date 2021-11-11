@@ -1,5 +1,5 @@
 plugins {
-    val kotlinVersion = "1.5.31"
+    val kotlinVersion = "1.5.10"
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
 
@@ -17,11 +17,10 @@ repositories {
 }
 
 dependencies {
-    val ktor_version = "1.6.5"
+    val ktor_version = "1.5.4"
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-    implementation(group="com.github.kevinsawicki", version="6.0", name = "http-request")
     implementation(group = "org.json", name="json", version = "20210307")
 
     implementation("io.ktor:ktor-client-core:$ktor_version")

@@ -6,6 +6,7 @@ import me.sagiri.mirai.imagesearch.api.Pixiv
 import me.sagiri.mirai.imagesearch.api.PixivImageDownloader
 import me.sagiri.mirai.imagesearch.api.SauceNAO
 import me.sagiri.mirai.imagesearch.config.Proxy
+import me.sagiri.mirai.imagesearch.config.PximgProxy
 import me.sagiri.mirai.imagesearch.config.R18
 import me.sagiri.mirai.imagesearch.tools.Downloader
 import me.sagiri.mirai.imagesearch.tools.HttpClient
@@ -40,6 +41,7 @@ object PluginMain : KotlinPlugin(
     override fun PluginComponentStorage.onLoad() {
         Proxy.reload()
         R18.reload()
+        PximgProxy.reload()
 
         if(Proxy.port != 0L) {
             HttpClient.client = io.ktor.client.HttpClient(Apache) {
@@ -256,6 +258,7 @@ object PluginMain : KotlinPlugin(
     }
 
     override fun onDisable() {
+        HttpClient.client.close()
 
     }
 }
